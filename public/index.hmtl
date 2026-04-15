@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JDM Registry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: #222;
+      --accent: #e8ff00;
+      --accent2: #ff3c00;
+      --text: #f0f0f0;
+      --muted: #666;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 999;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 3rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-left: 2rem;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--text); }
+
+    .hero {
+      padding: 6rem 3rem 4rem;
+      max-width: 900px;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 10vw, 9rem);
+      line-height: 0.9;
+      letter-spacing: 0.02em;
+      margin-bottom: 2rem;
+    }
+
+    h1 span { color: var(--accent2); }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+      max-width: 520px;
+      margin-bottom: 3rem;
+    }
+
+    .cta-row {
+      display: flex; gap: 1rem; flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 0.85rem 2rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #000;
+    }
+    .btn-primary:hover { background: #fff; }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-outline:hover { border-color: var(--text); }
+
+    .stats-row {
+      display: flex; gap: 3rem;
+      padding: 3rem;
+      border-top: 1px solid var(--border);
+      margin-top: auto;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      color: var(--accent);
+    }
+
+    #live-count { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">JDM Registry</div>
+    <nav>
+      <a href="/upload">Add Car</a>
+      <a href="/list">Browse</a>
+      <a href="/query">Search</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div class="hero-eyebrow">Japan Domestic Market · Car Database</div>
+    <h1>BUILD YOUR<br><span>GARAGE</span><br>DATABASE</h1>
+    <p>Document, track, and query iconic JDM machines. From the NA Miata to the R34 GT-R — every spec, every build, catalogued.</p>
+    <div class="cta-row">
+      <a href="/upload" class="btn btn-primary">Add a Car</a>
+      <a href="/list" class="btn btn-outline">Browse Registry</a>
+      <a href="/query" class="btn btn-outline">Search</a>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div>
+      <div class="stat-label">Cars Registered</div>
+      <div class="stat-value" id="live-count">—</div>
+    </div>
+    <div>
+      <div class="stat-label">Stack</div>
+      <div class="stat-value">Node + Mongo</div>
+    </div>
+    <div>
+      <div class="stat-label">Routes</div>
+      <div class="stat-value">REST</div>
+    </div>
+  </div>
+
+  <script>
+    fetch('/api/cars/all')
+      .then(r => r.json())
+      .then(d => {
+        document.getElementById('live-count').textContent = d.cars.length;
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>
