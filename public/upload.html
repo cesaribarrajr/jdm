@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Car · JDM Registry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">JDM Registry</a>
+    <nav>
+      <a href="/upload" class="active">Add Car</a>
+      <a href="/list">Browse</a>
+      <a href="/query">Search</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="eyebrow">New Entry</div>
+    <h1 class="page-title" style="margin-bottom:2rem">Register<br>a Car</h1>
+
+    <div class="form-card">
+      <div class="form-grid" id="car-form">
+        <div class="form-group">
+          <label for="make">Make</label>
+          <input type="text" id="make" placeholder="e.g. Nissan" required>
+        </div>
+        <div class="form-group">
+          <label for="model">Model</label>
+          <input type="text" id="model" placeholder="e.g. 350Z" required>
+        </div>
+        <div class="form-group">
+          <label for="year">Year</label>
+          <input type="number" id="year" placeholder="e.g. 2003" min="1970" max="2025" required>
+        </div>
+        <div class="form-group">
+          <label for="horsepower">Horsepower (hp)</label>
+          <input type="number" id="horsepower" placeholder="e.g. 287" min="50" max="2000" required>
+        </div>
+        <div class="form-group full">
+          <label for="engine">Engine</label>
+          <input type="text" id="engine" placeholder="e.g. VQ35DE 3.5L V6" required>
+        </div>
+        <div class="form-group">
+          <label for="drivetrain">Drivetrain</label>
+          <select id="drivetrain" required>
+            <option value="" disabled selected>Select…</option>
+            <option value="RWD">RWD</option>
+            <option value="FWD">FWD</option>
+            <option value="AWD">AWD</option>
+            <option value="4WD">4WD</option>
+          </select>
+        </div>
+        <div class="form-group" style="align-items:flex-end; justify-content:flex-end;">
+          <button class="btn btn-primary" onclick="submitCar()">Add to Registry</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast ' + type + ' show';
+      setTimeout(() => t.className = 'toast', 3000);
+    }
+
+    async function submitCar() {
+      const fields = ['make','model','year','horsepower','engine','drivetrain'];
+      const data = {};
+      for (const f of fields) {
+        const val = document.getElementById(f).value.trim();
+        if (!val) { showToast('Please fill in all fields.', 'error'); return; }
+        data[f] = val;
+      }
+      data.year = Number(data.year);
+      data.horsepower = Number(data.horsepower);
+
+      try {
+        const res = await fetch('/car', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (json.success) {
+          showToast(`${data.year} ${data.make} ${data.model} added!`, 'success');
+          fields.forEach(f => {
+            const el = document.getElementById(f);
+            el.value = f === 'drivetrain' ? '' : '';
+            if (f === 'drivetrain') el.selectedIndex = 0;
+          });
+        } else {
+          showToast('Error: ' + json.error, 'error');
+        }
+      } catch (err) {
+        showToast('Network error. Is the server running?', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

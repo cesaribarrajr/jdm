@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Search · JDM Registry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">JDM Registry</a>
+    <nav>
+      <a href="/upload">Add Car</a>
+      <a href="/list">Browse</a>
+      <a href="/query" class="active">Search</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="eyebrow">Filter & Find</div>
+    <h1 class="page-title" style="margin-bottom:2rem">Query<br>the Fleet</h1>
+
+    <div class="form-card" style="margin-bottom:2rem">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="q-make">Make (optional)</label>
+          <input type="text" id="q-make" placeholder="e.g. Honda">
+        </div>
+        <div class="form-group">
+          <label for="q-drivetrain">Drivetrain</label>
+          <select id="q-drivetrain">
+            <option value="">Any</option>
+            <option value="RWD">RWD</option>
+            <option value="FWD">FWD</option>
+            <option value="AWD">AWD</option>
+            <option value="4WD">4WD</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="q-maxhp">Max Horsepower</label>
+          <input type="number" id="q-maxhp" placeholder="e.g. 300" min="0">
+        </div>
+        <div class="form-group">
+          <label for="q-minyear">Min Year</label>
+          <input type="number" id="q-minyear" placeholder="e.g. 1995" min="1970" max="2025">
+        </div>
+      </div>
+      <div style="margin-top:1.5rem;display:flex;gap:1rem;align-items:center">
+        <button class="btn btn-primary" onclick="runQuery()">Search</button>
+        <button class="btn btn-outline" onclick="clearQuery()">Clear</button>
+        <span id="result-meta" style="font-size:0.8rem;color:var(--muted);margin-left:auto"></span>
+      </div>
+    </div>
+
+    <div id="results-container"></div>
+  </div>
+
+  <script>
+    function buildQueryString() {
+      const params = new URLSearchParams();
+      const make = document.getElementById('q-make').value.trim();
+      const drivetrain = document.getElementById('q-drivetrain').value;
+      const maxHp = document.getElementById('q-maxhp').value.trim();
+      const minYear = document.getElementById('q-minyear').value.trim();
+      if (make) params.set('make', make);
+      if (drivetrain) params.set('drivetrain', drivetrain);
+      if (maxHp) params.set('maxHp', maxHp);
+      if (minYear) params.set('minYear', minYear);
+      return params.toString();
+    }
+
+    function renderResults(cars) {
+      const container = document.getElementById('results-container');
+      if (!cars.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <span class="big">NADA</span>
+            No cars match your filters.
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="cars-grid">
+          <div class="car-row header">
+            <span class="col-header">Make</span>
+            <span class="col-header">Model</span>
+            <span class="col-header">Year</span>
+            <span class="col-header">HP</span>
+            <span class="col-header">Engine</span>
+            <span class="col-header">Drive</span>
+          </div>
+          ${cars.map(c => `
+            <div class="car-row">
+              <span class="car-make">${c.make}</span>
+              <span class="car-model">${c.model}</span>
+              <span style="color:var(--muted)">${c.year}</span>
+              <span class="hp-value">${c.horsepower}</span>
+              <span style="font-size:0.8rem;color:var(--muted)">${c.engine}</span>
+              <span class="badge">${c.drivetrain}</span>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    async function runQuery() {
+      const qs = buildQueryString();
+      const meta = document.getElementById('result-meta');
+      meta.textContent = 'Searching…';
+      document.getElementById('results-container').innerHTML = '';
+
+      try {
+        const res = await fetch('/cars' + (qs ? '?' + qs : ''));
+        const data = await res.json();
+        meta.textContent = `${data.count} result${data.count !== 1 ? 's' : ''} · sorted by HP ↑`;
+        renderResults(data.cars);
+      } catch (err) {
+        meta.textContent = 'Query failed.';
+        document.getElementById('results-container').innerHTML =
+          '<div style="color:var(--error);padding:2rem 0">Request failed. Check server connection.</div>';
+      }
+    }
+
+    function clearQuery() {
+      ['q-make','q-maxhp','q-minyear'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('q-drivetrain').selectedIndex = 0;
+      document.getElementById('result-meta').textContent = '';
+      document.getElementById('results-container').innerHTML = '';
+    }
+
+    // Run query on Enter key
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') runQuery();
+    });
+
+    // Auto-load all on page open
+    runQuery();
+  </script>
+</body>
+</html>

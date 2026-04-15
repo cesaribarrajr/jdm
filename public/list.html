@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Browse · JDM Registry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="logo">JDM Registry</a>
+    <nav>
+      <a href="/upload">Add Car</a>
+      <a href="/list" class="active">Browse</a>
+      <a href="/query">Search</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div class="eyebrow">Full Collection</div>
+    <h1 class="page-title" style="margin-bottom:0.5rem">The Registry</h1>
+    <p style="color:var(--muted); margin-bottom:2rem; font-size:0.9rem">
+      All <span id="count" style="color:var(--accent)">—</span> cars on record · sorted by newest first
+    </p>
+
+    <div id="cars-container">
+      <div style="color:var(--muted); padding:2rem 0; font-size:0.9rem">Loading…</div>
+    </div>
+  </div>
+
+  <script>
+    function formatDate(d) {
+      return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    }
+
+    function renderCars(cars) {
+      const container = document.getElementById('cars-container');
+      if (!cars.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <span class="big">EMPTY</span>
+            No cars registered yet. <a href="/upload" style="color:var(--accent)">Add the first one.</a>
+          </div>`;
+        return;
+      }
+
+      const html = `
+        <div class="cars-grid">
+          <div class="car-row header">
+            <span class="col-header">Make</span>
+            <span class="col-header">Model</span>
+            <span class="col-header">Year</span>
+            <span class="col-header">HP</span>
+            <span class="col-header">Engine</span>
+            <span class="col-header">Drive</span>
+          </div>
+          ${cars.map(c => `
+            <div class="car-row">
+              <span class="car-make">${c.make}</span>
+              <span class="car-model">${c.model}</span>
+              <span style="color:var(--muted)">${c.year}</span>
+              <span class="hp-value">${c.horsepower}</span>
+              <span style="font-size:0.8rem;color:var(--muted)">${c.engine}</span>
+              <span class="badge">${c.drivetrain}</span>
+            </div>
+          `).join('')}
+        </div>`;
+      container.innerHTML = html;
+    }
+
+    async function loadCars() {
+      try {
+        const res = await fetch('/api/cars/all');
+        const data = await res.json();
+        document.getElementById('count').textContent = data.cars.length;
+        renderCars(data.cars);
+      } catch (err) {
+        document.getElementById('cars-container').innerHTML =
+          '<div style="color:var(--error);padding:2rem 0">Failed to load. Is the server running?</div>';
+      }
+    }
+
+    loadCars();
+  </script>
+</body>
+</html>
